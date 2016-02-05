@@ -1,5 +1,6 @@
 {
   "name": "formio-question",
+  "version": "0.0.1",
   "authors": [
     "Zack Urben <zackurben@gmail.com>"
   ],
@@ -10,13 +11,15 @@
     "formio"
   ],
   "license": "MIT",
-  "homepage": "github.com/formio/formio-question",
+  "homepage": "https://github.com/formio/formio-question",
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "demo.png",
+    "index.html"
   ],
   "dependencies": {
     "angular-nvd3": "^1.0.5",
