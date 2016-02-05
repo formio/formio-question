@@ -1,0 +1,26 @@
+{
+  "name": "formio-question",
+  "authors": [
+    "Zack Urben <zackurben@gmail.com>"
+  ],
+  "description": "A directive that provides question and answer capabilities for Form.io forms.",
+  "main": "dist/question.js",
+  "moduleType": [],
+  "keywords": [
+    "formio"
+  ],
+  "license": "MIT",
+  "homepage": "github.com/formio/formio-question",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-nvd3": "^1.0.5",
+    "formio": "^1.0.0",
+    "lodash": "^4.2.1"
+  }
+}
