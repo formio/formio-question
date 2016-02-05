@@ -1,0 +1,37 @@
+{
+  "name": "formio",
+  "version": "1.0.0",
+  "authors": [
+    "Travis Tidwell <travis@form.io>"
+  ],
+  "main": [
+    "dist/formio.js",
+    "css/formio.css"
+  ],
+  "description": "The Form.IO form renderer.",
+  "keywords": [
+    "angularjs",
+    "ionic",
+    "form"
+  ],
+  "dependencies": {
+    "angular": "~1.4.9",
+    "ng-file-upload": "~11.2.1",
+    "angular-sanitize": "~1.4.9",
+    "angular-bootstrap": "~1.1.0",
+    "angular-moment": "~0.10.3",
+    "bootstrap": "~3.3.6",
+    "bootstrap-ui-datetime-picker": "~2.1.0",
+    "signature_pad": "~1.5.2",
+    "angular-ui-mask": "~1.6.8",
+    "ui-select": "angular-ui-select#~0.13.2"
+  },
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
