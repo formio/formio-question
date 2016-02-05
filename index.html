@@ -1,0 +1,94 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <title>Formio Question Example</title>
+  <meta name="description" content="A raw form to use with https://form.io">
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="bower_components/formio/css/formio.css"/>
+  <link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css">
+</head>
+  <body ng-app="formioQuestion" ng-controller="QuestionController">
+  <a href="https://github.com/formio/formio-question" target="_blank"><img style="z-index:5000; position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/121cd7cbdc3e4855075ea8b558508b91ac463ac2/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png"></a>
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="https://form.io"><img style="height: 2em; margin-top: -0.5em;" src='https://portal.form.io/images/formio-logo-white.png'/></a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="jumbotron" style="margin-top: 50px;">
+    <div class="container text-center">
+      <p>This is a live, working application showing off the <strong>Form Quiz</strong> capabilities of <a target="_blank" href="https://form.io">Form.io</a>.</p>
+      <p>All the magic happens with one line of code</p>
+      <p><strong><pre>&lt;formio-question src="'{{ formUrl }}'" question="'{{question}}'"&gt;&lt;/formio-question&gt;</pre></strong></p>
+      <ul class="list-inline">
+        <li><a class="btn btn-primary" target="_blank" href="https://github.com/formio/formio-question">Find out more</a></li>
+        <li><a class="btn btn-success" target="_blank" href="https://form.io">Go to Form.io</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="col-md-6 col-md-offset-3">
+      <div class="panel panel-default">
+        <div class="panel-heading">Question</div>
+        <div class="panel-body">
+          <formio-question
+            src="formUrl"
+            question="question"
+            submission="submission"
+            preview-results="true"
+            update-answer="true"
+          ></formio-question>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="bower_components/lodash/dist/lodash.min.js"></script>
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+  <script src="bower_components/angular/angular.js"></script>
+  <script src="bower_components/ng-file-upload/ng-file-upload.js"></script>
+  <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+  <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+  <script src="bower_components/moment/moment.js"></script>
+  <script src="bower_components/angular-moment/angular-moment.js"></script>
+  <script src="bower_components/ui-select/dist/select.js"></script>
+  <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+  <script src="bower_components/bootstrap-ui-datetime-picker/dist/datetime-picker.min.js"></script>
+  <script src="bower_components/signature_pad/signature_pad.js"></script>
+  <script src="bower_components/angular-ui-mask/dist/mask.js"></script>
+  <script src="bower_components/formio/dist/formio.js"></script>
+  <script src="bower_components/d3/d3.js"></script>
+  <script src="bower_components/nvd3/build/nv.d3.js"></script>
+  <script src="bower_components/angular-nvd3/dist/angular-nvd3.js"></script>
+  <script src="src/question.js"></script>
+  <script type="text/javascript">
+    var query = {};
+    location.search.substr(1).split("&").forEach(function(item) {
+      query[item.split("=")[0]] = item.split("=")[1] && decodeURIComponent(item.split("=")[1]);
+    });
+
+    angular.module('formioQuestion', ['formio.question'])
+      .controller('QuestionController', [
+        '$scope',
+        function(
+          $scope
+        ) {
+          $scope.formUrl = query.form || 'https://neuzcdyieetapcy.form.io/question';
+          $scope.question = 'favcolor';
+          $scope.submission = {data: {}};
+        }
+      ]);
+  </script>
+</body>
+</html>

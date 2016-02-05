@@ -3,7 +3,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
     var formioQuestionTemplate =
       '<div class="formio-question-form"></div>' +
       '<button ng-if="previewResults" class="btn btn-success btn-sm" ng-click="showAnalytics()">Results</button>' +
-      '<button class="btn btn-primary btn-sm" ng-click="save()">Submit</button>';
+      '<button class="btn btn-primary btn-sm pull-right" ng-click="save()">Submit</button>';
 
     return {
       restrict: 'E',
@@ -51,6 +51,10 @@ angular.module('formio.question', ['formio', 'nvd3'])
         ) {
           $scope.page = {};
           $scope.form = {};
+
+          if (!$scope.submission) {
+            $scope.submission = {data: {}};
+          }
 
           // The available graph types.
           var types = ['table', 'pie'];
