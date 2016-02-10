@@ -28,9 +28,19 @@ angular.module('formio.question', ['formio', 'nvd3'])
         chartAdvanced: '=',
         chartDataCustomizer: '='
       },
-      link: function(scope, element) {
-        scope.questionLoaded = false;
-        scope.questionElement = angular.element('.formio-question', element);
+      compile: function(tElement, tAttrs) {
+        return {
+          pre: function preLink(scope, iElement, iAttrs, controller) {
+            scope.questionLoaded = false;
+            scope.questionElement = angular.element('.formio-question', iElement);
+          },
+          post: function postLink(scope, iElement, iAttrs, controller) {
+            iAttrs.submission = iAttrs.submission || {data: {}};
+            iAttrs.previewResults = iAttrs.previewResults || false;
+            iAttrs.updateAnswer = iAttrs.updateAnswer || false;
+            iAttrs.chart = iAttrs.chart || 'table';
+          }
+        }
       },
       controller: [
         '$scope',
@@ -51,10 +61,6 @@ angular.module('formio.question', ['formio', 'nvd3'])
         ) {
           $scope.page = {};
           $scope.form = {};
-
-          if (!$scope.submission) {
-            $scope.submission = {data: {}};
-          }
 
           // The available graph types.
           var types = ['table', 'pie'];
