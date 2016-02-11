@@ -10,7 +10,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
       replace: true,
       template:
         '<div>'+
-          '<i ng-show="{{!questionLoaded}}" id="formio-loading" style="font-size: 2em;" class="glyphicon glyphicon-refresh glyphicon-spin"></i>'+
+          '<i ng-show="!questionLoaded" id="formio-loading" style="font-size: 2em;" class="glyphicon glyphicon-refresh glyphicon-spin"></i>'+
           '<div ng-repeat="alert in formioAlerts" class="alert alert-{{ alert.type }}" role="alert">'+
             '{{ alert.message }}'+
           '</div>' +
@@ -20,16 +20,16 @@ angular.module('formio.question', ['formio', 'nvd3'])
         '</div>',
       scope: {
         src: '=',
+        question: '=',
         form: '=?',
         submissions: '=?',
-        question: '=',
         submission: '=?',
         previewResults: '=?',
         updateAnswer: '=?',
         chart: '=?',
         chartAdvanced: '=?',
         chartDataCustomizer: '=?',
-        waitForPromise: '='
+        waitForPromise: '=?'
       },
       compile: function(tElement, tAttrs) {
         return {
@@ -54,6 +54,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
         '$http',
         'FormioUtils',
         '$q',
+        '$timeout',
         function(
           $scope,
           $compile,
@@ -62,7 +63,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
           FormioScope,
           $http,
           FormioUtils,
-          $q
+          $q,
+          $timeout
         ) {
           $scope.page = {};
 
@@ -231,31 +233,21 @@ angular.module('formio.question', ['formio', 'nvd3'])
            * Show the currently configured question, in the formio-question-form element.
            */
           $scope.showQuestion = function() {
-            var promises = [];
+            $scope.questionLoaded = true;
+            $scope.formioAlerts = [];
 
-            // If a promise was given to wait on, then wait before accessing the dom.
-            if ($scope.waitForPromise) {
-              promises.unshift($scope.waitForPromise);
+            if (!$scope.updateAnswer) {
+              $scope.showAnalytics();
             }
 
-            $q.all(promises)
-              .then(function() {
-                $scope.questionLoaded = true;
-                $scope.formioAlerts = [];
+            $scope.page.components = [FormioUtils.getComponent($scope.form.components, $scope.question)];
+            var pageElement = angular.element(document.createElement('formio'));
 
-                if (!$scope.updateAnswer) {
-                  $scope.showAnalytics();
-                }
-
-                $scope.page.components = [FormioUtils.getComponent($scope.form.components, $scope.question)];
-                var pageElement = angular.element(document.createElement('formio'));
-
-                angular.element(document.getElementsByClassName('formio-question-form'))
-                  .html($compile(pageElement.attr({
-                    form: 'page',
-                    submission: 'submission'
-                  }))($scope));
-              });
+            angular.element(document.getElementsByClassName('formio-question-form'))
+              .html($compile(pageElement.attr({
+                form: 'page',
+                submission: 'submission'
+              }))($scope));
           };
 
           /**
@@ -286,29 +278,40 @@ angular.module('formio.question', ['formio', 'nvd3'])
               });
           };
 
-          // Watch the chart type to change the graph.
-          $scope.$watch('chart', function(newVal, oldVal) {
-            if (newVal !== oldVal) {
-              $scope.showAnalytics();
-            }
-          });
+          var promises = [];
+          // If a promise was given to wait on, then wait before accessing the dom.
+          if ($scope.waitForPromise) {
+            promises.unshift($scope.waitForPromise);
+          }
 
-          // Check if the form was given, if provided, dont query the api.
-          if ($scope.form) {
-            $scope.showQuestion();
-          }
-          // No cached form was provided, use the given form url to query the api.
-          else if ($scope.src) {
-            $http.get($scope.src)
-              .then(function(data) {
-                data = data.data;
-                $scope.form = data;
-                $scope.showQuestion();
-              })
-              .catch(function(err) {
-                console.error(err);
+          $q.all(promises)
+            .then(function() {
+              // Watch the chart type to change the graph.
+              $scope.$watch('chart', function(newVal, oldVal) {
+                if (newVal !== oldVal) {
+                  $scope.showAnalytics();
+                }
               });
-          }
+
+              return $timeout(function() {
+                // Check if the form was given, if provided, dont query the api.
+                if ($scope.form) {
+                  $scope.showQuestion();
+                }
+                // No cached form was provided, use the given form url to query the api.
+                else if ($scope.src) {
+                  $http.get($scope.src)
+                    .then(function(data) {
+                      data = data.data;
+                      $scope.form = data;
+                      $scope.showQuestion();
+                    })
+                    .catch(function(err) {
+                      console.error(err);
+                    });
+                }
+              })
+            });
         }
       ]
     };
