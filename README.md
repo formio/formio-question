@@ -13,18 +13,55 @@ Options
 
 The following options are available for the directive, to further customize the output:
 
-`submission` {Object} If provided, the question will use the provided submission object
+`src`
 
-`preview-results` {Boolean, default: false} If provided, the results button will be available before a submission has been made.
+    {Required, String} The url for the form being used as a questionnaire.
 
-`update-answer` {Boolean, default: false} If provided, the results page will contain a question button to allow the submission to be changed.
+`question`
 
-`chart` {String: default: table} If provided, the results will be displayed using the given type.
-  - Available: table, pie
+    {Required, String} The API key of the form component to be displayed as a question.
 
-`chartAdvanced` {Object} If provided, nvd3 will use these options for a chart rather than an internal type. Requires `chartDataCustomizer` if provided. See [NVD3 Documentation](http://krispo.github.io/angular-nvd3/#/) for more information.
+`form`
 
-`chartDataCustomizer` {Function} If provided, the results of all submissions will be run through this function before given to the chart defined in `chartAdvanced`. A single parameter data will need to be modified to fix the key:value pairs for the provided chart.
+    {Optional, Object} The form containing the current question. If provided, the directive will not query the API, and uses this definition
+    as the cached value. Helpful when displaying more than one question.
+
+`submissions`
+
+    {Optional, Array} The submissions for the form containing the question. If provided, the directive will not query the API, and uses the
+    given values as the cached answers. Helpful when displaying more than one question from the same form.
+
+`submission`
+
+    {Optional, Object} If provided, the question will use the provided submission object
+
+`wait-for-promise`
+
+    {Optional, Promise} If provided, the directive will wait until the promise resolves, before rendering the question or answer.
+
+`preview-results`
+
+    {Optional, Boolean, default: false} If provided, the results button will be available before a submission has been made.
+
+`update-answer`
+
+    {Optional, Boolean, default: false} If provided, the results page will contain a question button to allow the submission to be changed.
+
+`chart`
+
+    {Optional, String: default: 'table'} If provided, the results will be displayed using the given type.
+
+    Available: table, pie
+
+`chartAdvanced`
+
+    {Optional, Object} If provided, nvd3 will use these options for a chart rather than an internal type. Requires `chartDataCustomizer` if provided.
+  See [NVD3 Documentation](http://krispo.github.io/angular-nvd3/#/) for more information.
+
+`chartDataCustomizer`
+
+    {Optional, Function} If provided, the results of all submissions will be run through this function before given to the chart defined in
+    chartAdvanced. A single parameter data will need to be modified to fix the key:value pairs for the provided chart.
 
 Getting Started
 ===================
