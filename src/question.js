@@ -4,7 +4,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
       '<div class="formio-question-form"></div>' +
       '<button ng-if="previewResults && (view === \'question\')" class="btn btn-success btn-sm" ng-click="showAnalytics()">Results</button>' +
       '<button ng-if="updateAnswer && (view === \'analytics\')" class="btn btn-success btn-sm" ng-click="resetQuestion()">Question</button>' +
-      '<button class="btn btn-primary btn-sm pull-right" ng-click="save()">Submit</button>';
+      '<button class="btn btn-primary btn-sm pull-right" ng-click="save()" ng-disabled="disabledInput">Submit</button>';
 
     return {
       restrict: 'E',
@@ -30,7 +30,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
         chart: '=',
         chartAdvanced: '=',
         chartDataCustomizer: '=',
-        waitForPromise: '='
+        waitForPromise: '=',
+        disabledInput: '='
       },
       link: function link(scope, element, attrs, controller, transcludeFn) {
         scope.questionLoaded = false;
