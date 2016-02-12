@@ -2,7 +2,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
   .directive('formioQuestion', function() {
     var formioQuestionTemplate =
       '<div class="formio-question-form"></div>' +
-      '<button ng-if="previewResults" class="btn btn-success btn-sm" ng-click="showAnalytics()">Results</button>' +
+      '<button ng-if="previewResults && (view === \'question\')" class="btn btn-success btn-sm" ng-click="showAnalytics()">Results</button>' +
+      '<button ng-if="updateAnswer && (view === \'analytics\')" class="btn btn-success btn-sm" ng-click="resetQuestion()">Question</button>' +
       '<button class="btn btn-primary btn-sm pull-right" ng-click="save()">Submit</button>';
 
     return {
@@ -21,29 +22,20 @@ angular.module('formio.question', ['formio', 'nvd3'])
       scope: {
         src: '=',
         question: '=',
-        form: '=?',
-        submissions: '=?',
-        submission: '=?',
-        previewResults: '=?',
-        updateAnswer: '=?',
-        chart: '=?',
-        chartAdvanced: '=?',
-        chartDataCustomizer: '=?',
-        waitForPromise: '=?'
+        form: '=',
+        submissions: '=',
+        submission: '=',
+        previewResults: '=',
+        updateAnswer: '=',
+        chart: '=',
+        chartAdvanced: '=',
+        chartDataCustomizer: '=',
+        waitForPromise: '='
       },
-      compile: function(tElement, tAttrs) {
-        return {
-          pre: function preLink(scope, iElement, iAttrs, controller) {
-            scope.questionElement = angular.element('.formio-question', iElement);
-          },
-          post: function postLink(scope, iElement, iAttrs, controller) {
-            scope.questionLoaded = false;
-            iAttrs.submission = iAttrs.submission || {data: {}};
-            iAttrs.previewResults = iAttrs.previewResults || false;
-            iAttrs.updateAnswer = iAttrs.updateAnswer || false;
-            iAttrs.chart = iAttrs.chart || 'table';
-          }
-        }
+      link: function link(scope, element, attrs, controller, transcludeFn) {
+        scope.questionLoaded = false;
+        scope.questionElement = angular.element('.formio-question', element);
+        scope.questionElementForm = angular.element('.formio-question-form', element);
       },
       controller: [
         '$scope',
@@ -66,10 +58,13 @@ angular.module('formio.question', ['formio', 'nvd3'])
           $q,
           $timeout
         ) {
-          $scope.page = {};
-
           // The available graph types.
           var types = ['table', 'pie'];
+          $scope.views = {
+            question: 'question',
+            analytics: 'analytics'
+          };
+          $scope.view = $scope.views.question;
 
           /**
            * Generates the html for a table display of q/a.
@@ -101,8 +96,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
            *
            * @returns {*}
            */
-          var normalizeData = function() {
-            if (['table'].indexOf($scope.chart) !== -1) {
+          var normalizeData = function(type) {
+            if (['table'].indexOf(type) !== -1) {
               return _($scope.data)
                 .map(function(value, key) {
                   return {
@@ -112,7 +107,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
                 })
                 .value();
             }
-            else if (['pie'].indexOf($scope.chart) !== -1) {
+            else if (['pie'].indexOf(type) !== -1) {
               return _($scope.data)
                 .map(function(value, key) {
                   return {
@@ -133,28 +128,29 @@ angular.module('formio.question', ['formio', 'nvd3'])
             // Check for advanced usage.
             if ($scope.chartAdvanced &&_.get($scope.chartAdvanced, 'chart.type') && $scope.chartDataCustomizer) {
               // Make a nvd3 chart with the advanced options and mutate the data with the customizer.
-              $scope._data = $scope.chartDataCustomizer($scope.data);
-              return '<nvd3 options="chartAdvanced" data="_data"></nvd3>'
+              $scope.data = $scope.chartDataCustomizer($scope.data);
+              return '<nvd3 options="chartAdvanced" data="data"></nvd3>'
             }
+
+            // Determine the chart type.
+            var chart = ($scope.chart || 'table').toString().toLowerCase();
 
             // Continue with regular usage.
-            $scope.chart = $scope.chart.toString().toLowerCase();
-            $scope.data = normalizeData();
-
-            if (types.indexOf($scope.chart) === -1) {
-              console.error('Unknown type given: ' + $scope.chart);
+            $scope.data = normalizeData(chart);
+            if (types.indexOf(chart) === -1) {
+              console.error('Unknown type given: ' + chart);
             }
 
-            if ($scope.chart === 'table') {
+            if (chart === 'table') {
               return makeTable();
             }
-            else if ($scope.chart === 'pie') {
+            else if (chart === 'pie') {
               $scope.options = $scope.chartAdvanced || {
                 chart: {
                   type: 'pieChart',
                   height: 500,
-                  x: function(d){return d.key;},
-                  y: function(d){return d.y;},
+                  x: function(d) { return d.key },
+                  y: function(d) { return d.y },
                   showLabels: true,
                   duration: 500,
                   labelThreshold: 0.01,
@@ -178,16 +174,17 @@ angular.module('formio.question', ['formio', 'nvd3'])
            * Show the analytics for this specific question.
            */
           $scope.showAnalytics = function() {
+            $scope.view = $scope.views.analytics;
             /**
              * Using all the submission data, filter it for the specific question.
              *
              * @param {String} question
              *   The question key (API key) to select.
              */
-            var filterForQuestion = function() {
+            var filterForQuestion = function(submissions) {
               // Create a map of the responses, where key:response and value:quantity.
               $scope.data = {};
-              _($scope.submissions)
+              _(submissions)
                 .map('data.' + $scope.question)
                 .value()
                 .forEach(function(e) {
@@ -202,25 +199,22 @@ angular.module('formio.question', ['formio', 'nvd3'])
              */
             var makeDisplay = function() {
               // Build the answer display.
-              $scope.questionElement.html($compile(
+              $scope.questionElementForm.html($compile(
                 '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[question] || "N/A"}}</span></h3><br>' +
-                makeGraph() +
-                '<button ng-if="updateAnswer" class="btn btn-success btn-sm" ng-click="resetQuestion()">Question</button>'
+                makeGraph()
               )($scope));
             };
 
             // If the submissions were provided, use them rather than querying the api.
             if ($scope.submissions) {
-              filterForQuestion();
+              filterForQuestion($scope.submissions);
               makeDisplay();
             }
             // The submissions were not given, but the form url was; query the api url.
             else if (!$scope.submissions && $scope.src) {
               $http.get($scope.src + '/submission?limit=4294967295')
                 .then(function(data) {
-                  $scope.submissions = data.data;
-
-                  filterForQuestion();
+                  filterForQuestion(data.data);
                   makeDisplay();
                 })
                 .catch(function(err) {
@@ -233,17 +227,17 @@ angular.module('formio.question', ['formio', 'nvd3'])
            * Show the currently configured question, in the formio-question-form element.
            */
           $scope.showQuestion = function() {
+            $scope.view = $scope.views.question;
             $scope.questionLoaded = true;
             $scope.formioAlerts = [];
 
-            if (!$scope.updateAnswer) {
-              $scope.showAnalytics();
+            if (_.get($scope, 'submission.data.' + $scope.question) && !$scope.updateAnswer) {
+              return $scope.showAnalytics();
             }
 
-            $scope.page.components = [FormioUtils.getComponent($scope.form.components, $scope.question)];
             var pageElement = angular.element(document.createElement('formio'));
-
-            angular.element(document.getElementsByClassName('formio-question-form'))
+            //angular.element(document.getElementsByClassName('formio-question-form'))
+            angular.element($scope.questionElementForm)
               .html($compile(pageElement.attr({
                 form: 'page',
                 submission: 'submission'
@@ -254,7 +248,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
            * Reset the current question view, and return the questionElement contents to the pristine state.
            */
           $scope.resetQuestion = function() {
-            $scope.questionElement.html($compile(formioQuestionTemplate)($scope));
+            $scope.questionElementForm.html($compile(formioQuestionTemplate)($scope));
             $scope.showQuestion();
           };
 
@@ -278,39 +272,44 @@ angular.module('formio.question', ['formio', 'nvd3'])
               });
           };
 
-          var promises = [];
           // If a promise was given to wait on, then wait before accessing the dom.
+          var promises = [];
           if ($scope.waitForPromise) {
             promises.unshift($scope.waitForPromise);
           }
 
+          // Watch the chart type to change the graph.
+          $scope.$watch('chart', function(newVal, oldVal) {
+            if (newVal !== oldVal) {
+              $scope.showAnalytics();
+            }
+          });
+
           $q.all(promises)
             .then(function() {
-              // Watch the chart type to change the graph.
-              $scope.$watch('chart', function(newVal, oldVal) {
-                if (newVal !== oldVal) {
-                  $scope.showAnalytics();
-                }
-              });
-
               return $timeout(function() {
                 // Check if the form was given, if provided, dont query the api.
                 if ($scope.form) {
-                  $scope.showQuestion();
+                  return $scope.form;
                 }
                 // No cached form was provided, use the given form url to query the api.
                 else if ($scope.src) {
-                  $http.get($scope.src)
+                  return $http.get($scope.src)
                     .then(function(data) {
-                      data = data.data;
-                      $scope.form = data;
-                      $scope.showQuestion();
+                      return data.data;
                     })
                     .catch(function(err) {
                       console.error(err);
                     });
                 }
               })
+            })
+            .then(function(form) {
+              $scope.page = {
+                components: [FormioUtils.getComponent(form.components, $scope.question)]
+              };
+
+              $scope.showQuestion();
             });
         }
       ]
