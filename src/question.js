@@ -206,12 +206,13 @@ angular.module('formio.question', ['formio', 'nvd3'])
             };
 
             // If the submissions were provided, use them rather than querying the api.
-            if ($scope.submissions) {
+            if ($scope.useSubmissionCache && $scope.submissions) {
               filterForQuestion($scope.submissions);
               makeDisplay();
             }
             // The submissions were not given, but the form url was; query the api url.
-            else if (!$scope.submissions && $scope.src) {
+            else if ($scope.src) {
+              $scope.useSubmissionCache = true;
               $http.get($scope.src + '/submission?limit=4294967295')
                 .then(function(data) {
                   filterForQuestion(data.data);
@@ -265,6 +266,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
 
             $http[method](url, $scope.submission)
               .then(function() {
+                $scope.useSubmissionCache = false;
                 $scope.showAnalytics();
               })
               .catch(function(err) {
