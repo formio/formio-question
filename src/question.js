@@ -60,7 +60,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
           $timeout
         ) {
           // The available graph types.
-          var types = ['table', 'pie'];
+          var types = ['table', 'pie', 'word cloud'];
           $scope.views = {
             question: 'question',
             analytics: 'analytics'
@@ -92,13 +92,59 @@ angular.module('formio.question', ['formio', 'nvd3'])
             '</div>';
           };
 
+          var makeWordCloud = function() {
+            var total = _($scope.data)
+              .map('value')
+              .value();
+            total = _.sum(total);
+
+            $scope.graphCallback = function(then) {
+              var node = $scope.questionElementForm.find('#wordcloud')[0];
+              var fill = d3.scale.category20();
+              var layout = d3.layout.cloud()
+                .size([400, 400])
+                .words($scope.data.map(function(d) {
+                  return {text: d.label.toString(), size: ((d.value/total) * 150)};
+                }))
+                .padding(5)
+                .rotate(function() { return ~~(Math.random() * 2) * 90; })
+                .font('Impact')
+                .fontSize(function(d) { return d.size; })
+                .on('end', draw);
+              layout.start();
+
+              function draw(words) {
+                d3.select(node).append('svg')
+                  .attr('width', layout.size()[0])
+                  .attr('height', layout.size()[1])
+                  .append('g')
+                  .attr('transform', 'translate(' + layout.size()[0] / 2 + ',' + layout.size()[1] / 2 + ')')
+                  .selectAll('text')
+                  .data(words)
+                  .enter().append('text')
+                  .style('font-size', function(d) { return d.size + 'px'; })
+                  .style('font-family', 'Impact')
+                  .style('fill', function(d, i) { return fill(i); })
+                  .attr('text-anchor', 'middle')
+                  .attr('transform', function(d) {
+                    return 'translate(' + [d.x, d.y] + ')rotate(' + d.rotate + ')';
+                  })
+                  .text(function(d) { return d.text; });
+                then();
+              };
+            };
+
+            return '<div id="wordcloud"></div>'
+          };
+
           /**
            * Takes the common q/a result format and mutates it for graphing use in d3.
+           *
            *
            * @returns {*}
            */
           var normalizeData = function(type) {
-            if (['table'].indexOf(type) !== -1) {
+            if (['table', 'word cloud'].indexOf(type) !== -1) {
               return _($scope.data)
                 .map(function(value, key) {
                   return {
@@ -144,6 +190,9 @@ angular.module('formio.question', ['formio', 'nvd3'])
 
             if (chart === 'table') {
               return makeTable();
+            }
+            else if (chart === 'word cloud') {
+              return makeWordCloud();
             }
             else if (chart === 'pie') {
               $scope.options = $scope.chartAdvanced || {
@@ -204,6 +253,13 @@ angular.module('formio.question', ['formio', 'nvd3'])
                 '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[question] || "N/A"}}</span></h3><br>' +
                 makeGraph()
               )($scope));
+
+              // if a graph callback was set, execute it before continuing
+              if ($scope.graphCallback) {
+                $scope.graphCallback(function() {
+                  $scope.graphCallback = null;
+                });
+              }
             };
 
             // If the submissions were provided, use them rather than querying the api.
