@@ -1,11 +1,11 @@
 {
   "name": "formio-question",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "authors": [
     "Zack Urben <zackurben@gmail.com>"
   ],
   "description": "A directive that provides question and answer capabilities for Form.io forms.",
-  "main": "dist/question.js",
+  "main": "src/question.js",
   "moduleType": [],
   "keywords": [
     "formio"
@@ -25,6 +25,8 @@
     "angular-nvd3": "^1.0.5",
     "formio": "^1.0.0",
     "lodash": "^4.2.1",
-    "d3-cloud": "^1.2.1"
+    "d3-cloud": "^1.2.1",
+    "d3": "^3.5.15",
+    "nvd3": "^1.8.2"
   }
 }

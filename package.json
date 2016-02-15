@@ -1,9 +1,23 @@
 {
+  "scripts": {
+    "dist": "browserify src/question-full.js -o dist/question-full.js; uglifyjs --compress --screw-ie8 --stats dist/question-full.js -o dist/question-full.min.js"
+  },
   "devDependencies": {
+    "browserify": "^13.0.0",
     "del": "^2.2.0",
     "gulp": "^3.9.0",
     "gulp-load-plugins": "^1.2.0",
     "gulp-uglify": "^1.5.1",
-    "vinyl-paths": "^2.1.0"
+    "vinyl-paths": "^2.1.0",
+    "uglify-js": "^2.6.1"
+  },
+  "dependencies": {
+    "angular-nvd3": "^1.0.5",
+    "d3": "^3.5.15",
+    "d3-cloud": "^1.2.1",
+    "formio": "^1.2.3",
+    "lodash": "^4.3.0",
+    "ng-formio": "^1.2.1",
+    "nvd3": "^1.8.2"
   }
 }

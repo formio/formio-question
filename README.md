@@ -51,7 +51,7 @@ The following options are available for the directive, to further customize the 
 
     {Optional, String: default: 'table'} If provided, the results will be displayed using the given type.
 
-    Available: table, pie
+    Available: table, pie, word cloud
 
 `chartAdvanced`
 
@@ -78,24 +78,8 @@ bower install formio-question --save
 Then, you will need to add the wizard and its dependencies to your HTML page.
 
 ```
-<script src="bower_components/lodash/dist/lodash.min.js"></script>
-<script src="bower_components/jquery/dist/jquery.js"></script>
-<script src="bower_components/angular/angular.js"></script>
-<script src="bower_components/ng-file-upload/ng-file-upload.js"></script>
-<script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
-<script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
-<script src="bower_components/moment/moment.js"></script>
-<script src="bower_components/angular-moment/angular-moment.js"></script>
-<script src="bower_components/ui-select/dist/select.js"></script>
-<script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
-<script src="bower_components/bootstrap-ui-datetime-picker/dist/datetime-picker.min.js"></script>
-<script src="bower_components/signature_pad/signature_pad.js"></script>
-<script src="bower_components/angular-ui-mask/dist/mask.js"></script>
-<script src="bower_components/formio/dist/formio.js"></script>
-<script src="bower_components/d3/d3.js"></script>
-<script src="bower_components/nvd3/build/nv.d3.js"></script>
-<script src="bower_components/angular-nvd3/dist/angular-nvd3.js"></script>
-<script src="bower_components/formio-question/dist/question.js"></script>
+<link rel="stylesheet" href="https://cdn.rawgit.com/formio/ngFormio/v1.2.1/dist/formio-full.min.css"/>
+<script src=""https://cdn.rawgit.com/formio/formio-question/v1.0.0/dist/question-full.min.js"></script>
 ```
 
 Now, you will need to add this to your Angular.js module as a dependency like the following.
