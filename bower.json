@@ -5,7 +5,7 @@
     "Zack Urben <zackurben@gmail.com>"
   ],
   "description": "A directive that provides question and answer capabilities for Form.io forms.",
-  "main": "src/question.js",
+  "main": "dist/question-complete.min.js",
   "moduleType": [],
   "keywords": [
     "formio"

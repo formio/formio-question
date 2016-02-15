@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "dist": "browserify src/question-full.js -o dist/question-full.js; uglifyjs --compress --screw-ie8 --stats dist/question-full.js -o dist/question-full.min.js"
+    "dist-full": "browserify src/question-full.js -o dist/question-full.js; uglifyjs --compress --screw-ie8 --stats dist/question-full.js -o dist/question-full.min.js",
+    "dist-complete": "browserify src/question-complete.js -o dist/question-complete.js; uglifyjs --compress --screw-ie8 --stats dist/question-complete.js -o dist/question-complete.min.js",
+    "dist": "npm run dist-full; npm run dist-complete"
   },
   "devDependencies": {
     "browserify": "^13.0.0",
