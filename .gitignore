@@ -1,3 +1,5 @@
+# Ignore symlink
+bower_components/formio-question
 
 # Created by https://www.gitignore.io/api/osx,windows,webstorm,bower,node
 

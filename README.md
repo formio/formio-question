@@ -79,7 +79,7 @@ Then, you will need to add the wizard and its dependencies to your HTML page.
 
 ```
 <link rel="stylesheet" href="https://cdn.rawgit.com/formio/ngFormio/v1.2.1/dist/formio-full.min.css"/>
-<script src=""https://cdn.rawgit.com/formio/formio-question/v1.0.0/dist/question-full.min.js"></script>
+<script src=""https://cdn.rawgit.com/formio/formio-question/1.0.0/dist/question-full.min.js"></script>
 ```
 
 Now, you will need to add this to your Angular.js module as a dependency like the following.
