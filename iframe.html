@@ -1,0 +1,57 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <title>Formio Question IFrame</title>
+  <meta name="description" content="A raw form to use with https://form.io">
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="bower_components/formio/css/formio.css"/>
+  <link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css">
+</head>
+<body ng-app="formioQuestion" ng-controller="QuestionController">
+<div class="container">
+  <formio-question
+    src="formUrl"
+    question="question"
+    submission="submission"
+    preview-results="preview"
+    update-answer="update"
+    chart="chart"
+  ></formio-question>
+</div>
+
+<link rel="stylesheet" href="https://cdn.rawgit.com/formio/ngFormio/v1.2.1/dist/formio-full.min.css"/>
+<script src="dist/question-full.min.js"></script>
+<script type="text/javascript">
+  var query = {};
+  location.search.substr(1).split("&").forEach(function(item) {
+    query[item.split("=")[0]] = item.split("=")[1] && decodeURIComponent(item.split("=")[1]);
+  });
+
+  angular.module('formioQuestion', ['formio.question'])
+    .controller('QuestionController', [
+      '$scope',
+      function(
+        $scope
+      ) {
+        var boolean = {
+          'true': true,
+          'false': false
+        };
+
+        $scope.formUrl = query.form || 'https://neuzcdyieetapcy.form.io/question';
+        $scope.question = query.question || 'favcolor';
+        $scope.preview = query.preview
+          ? boolean[query.preview]
+          : true;
+        $scope.update = query.update
+          ? boolean[query.update]
+          : true;
+        $scope.chart = query.chart || 'table';
+        $scope.submission = {data: {}};
+      }
+    ]);
+</script>
+</body>
+</html>

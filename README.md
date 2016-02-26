@@ -102,6 +102,39 @@ and supply a component API key to the directive for rendering.
 
 ![](./demo.png)
 
+IFrame
+================
+IFrame embedding questions is possible with the following parameters and the given url.
+
+URL: http://formio.github.io/formio-question/iframe.html
+
+`form`
+
+    {Required, String} The url for the form being used as a questionnaire.
+     
+`question`
+
+    {Required, String} The API key of the form component to be displayed as a question.
+    
+`preview`
+
+    {Optional, Boolean, default: false} If provided, the results button will be available before a submission has been made.
+
+`update`
+
+    {Optional, Boolean, default: false} If provided, the results page will contain a question button to allow the submission to be changed.
+    
+`chart`
+
+    {Optional, String: default: table} If provided, the results will be displayed using the given type.
+  
+    Available: table, pie, word cloud
+
+Example IFrame Embed Code:
+```
+<iframe src="http://formio.github.io/formio-question/iframe.html??form=https://cuibqcmhuqgqhat.form.io/form/56ba3a5374d7d2010082d5fc&question=thefirstjava1Question&preview=true&update=false&chart=pie" height="500px" width="500px"></iframe>
+```
+
 License
 ================
 [MIT](./LICENSE.md)

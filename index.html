@@ -46,9 +46,9 @@
             src="formUrl"
             question="question"
             submission="submission"
-            preview-results="true"
-            update-answer="true"
-            chart="'pie'"
+            preview-results="preview"
+            update-answer="update"
+            chart="chart"
           ></formio-question>
         </div>
       </div>
@@ -69,8 +69,20 @@
         function(
           $scope
         ) {
+          var boolean = {
+            'true': true,
+            'false': false
+          };
+
           $scope.formUrl = query.form || 'https://neuzcdyieetapcy.form.io/question';
-          $scope.question = 'favcolor';
+          $scope.question = query.question || 'favcolor';
+          $scope.preview = query.preview
+            ? boolean[query.preview]
+            : true;
+          $scope.update = query.update
+            ? boolean[query.update]
+            : true;
+          $scope.chart = query.chart || 'table';
           $scope.submission = {data: {}};
         }
       ]);
