@@ -1,25 +1,24 @@
 var gulp = require('gulp');
 var plugins = require('gulp-load-plugins')();
-var del = require('del');
-var vinylPaths = require('vinyl-paths');
+
+plugins.source = require('vinyl-source-stream');
+plugins.browserify = require('browserify');
+plugins.watchify = require('watchify');
 
 // Clean the dist folder.
-gulp.task('clean', function() {
-  return gulp.src('dist').pipe(vinylPaths(del));
-});
+gulp.task('clean', require('del').bind(null, ['dist']));
 
-// Wire the dependencies into index.html
-gulp.task('scripts', function() {
-  return gulp.src('./src/question.js').pipe(plugins.uglify()).pipe(gulp.dest('./dist'));
-});
+// Scripts tasks.
+gulp.task('scripts:basic', require('./gulp/scripts-basic')(gulp, plugins));
+gulp.task('scripts:complete', require('./gulp/scripts-complete')(gulp, plugins));
+gulp.task('scripts:full', require('./gulp/scripts-full')(gulp, plugins));
+gulp.task('scripts', ['scripts:basic', 'scripts:complete', 'scripts:full']);
 
 // Define the build task.
 gulp.task('build', ['clean', 'scripts']);
 
 // Watch task for changes.
-gulp.task('watch', function() {
-  gulp.watch('./src/question.js', ['scripts']);
-});
+gulp.task('watch', require('./gulp/watch')(gulp, plugins));
 
 // Default
 gulp.task('default', ['build']);

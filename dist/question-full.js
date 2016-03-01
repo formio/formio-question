@@ -39210,7 +39210,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
       '<div class="formio-question-form"></div>' +
       '<button ng-if="previewResults && (view === \'question\')" class="btn btn-success btn-sm" ng-click="showAnalytics()">Results</button>' +
       '<button ng-if="updateAnswer && (view === \'analytics\')" class="btn btn-success btn-sm" ng-click="resetQuestion()">Question</button>' +
-      '<button class="btn btn-primary btn-sm pull-right" ng-click="save()" ng-disabled="disabledInput">Submit</button>';
+      '<button ng-if="!!submission.data[question] && (view === \'question\')" class="btn btn-primary btn-sm pull-right" ng-click="save()" ng-disabled="disabledInput">Submit</button>';
 
     return {
       restrict: 'E',
@@ -39473,6 +39473,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
             if ($scope.useSubmissionCache && $scope.submissions) {
               filterForQuestion($scope.submissions);
               makeDisplay();
+              $scope.$emit('showAnalytics');
             }
             // The submissions were not given, but the form url was; query the api url.
             else if ($scope.src) {
@@ -39481,6 +39482,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
                 .then(function(data) {
                   filterForQuestion(data.data);
                   makeDisplay();
+                  $scope.$emit('showAnalytics');
                 })
                 .catch(function(err) {
                   console.error(err);
@@ -39506,7 +39508,6 @@ angular.module('formio.question', ['formio', 'nvd3'])
             }
 
             var pageElement = angular.element(document.createElement('formio'));
-            //angular.element(document.getElementsByClassName('formio-question-form'))
             angular.element($scope.questionElementForm)
               .html($compile(pageElement.attr({
                 form: 'page',

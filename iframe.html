@@ -51,7 +51,6 @@
           ? boolean[query.update]
           : true;
         $scope.chart = query.chart || 'table';
-        $scope.submission = {data: {}};
 
         // Attempt to load an existing form, ignore if anonymous tag is present.
         var anon = query.anon
@@ -63,20 +62,11 @@
             _old = JSON.parse(_old);
           }
           catch(e) {
-            _old = {};
+            _old = {data: {}};
           }
 
           $scope.submission = _old;
         }
-
-        // Check for analytics when the question is shown, on initial load.
-        var done = false;
-        $scope.$on('showQuestion', function() {
-          if (!done && $scope.question && _.has($scope.submission, 'data.' + $scope.question)) {
-            done = true;
-            $scope.fio.showAnalytics();
-          }
-        });
 
         $scope.$on('questionSave', function(event, response) {
           localStorage.setItem($scope.formUrl, JSON.stringify(response.data));

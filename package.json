@@ -1,17 +1,17 @@
 {
   "scripts": {
-    "dist-full": "browserify src/question-full.js -o dist/question-full.js; uglifyjs --compress --screw-ie8 --stats dist/question-full.js -o dist/question-full.min.js",
-    "dist-complete": "browserify src/question-complete.js -o dist/question-complete.js; uglifyjs --compress --screw-ie8 --stats dist/question-complete.js -o dist/question-complete.min.js",
-    "dist": "npm run dist-full; npm run dist-complete"
+    "start": "gulp watch"
   },
   "devDependencies": {
     "browserify": "^13.0.0",
     "del": "^2.2.0",
     "gulp": "^3.9.0",
     "gulp-load-plugins": "^1.2.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-streamify": "^1.0.2",
     "gulp-uglify": "^1.5.1",
-    "vinyl-paths": "^2.1.0",
-    "uglify-js": "^2.6.1"
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.7.0"
   },
   "dependencies": {
     "angular-nvd3": "^1.0.5",
