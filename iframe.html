@@ -59,13 +59,14 @@
         var _old = localStorage.getItem($scope.formUrl);
         if (!anon && _old) {
           try {
-            _old = JSON.parse(_old);
+            $scope.submission = JSON.parse(_old);
           }
           catch(e) {
-            _old = {data: {}};
+            $scope.submission = {data: {}};
           }
-
-          $scope.submission = _old;
+        }
+        else {
+          $scope.submission = {data: {}};
         }
 
         $scope.$on('questionSave', function(event, response) {
