@@ -39528,7 +39528,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
               : $scope.src + '/submission/' + $scope.submission._id;
 
             $http[method](url, $scope.submission)
-              .then(function() {
+              .then(function(response) {
+                $scope.$emit('questionSave', response);
                 $scope.useSubmissionCache = false;
                 $scope.showAnalytics();
               })

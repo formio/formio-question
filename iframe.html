@@ -22,7 +22,7 @@
 </div>
 
 <link rel="stylesheet" href="https://cdn.rawgit.com/formio/ngFormio/v1.2.1/dist/formio-full.min.css"/>
-<script src="dist/question-full.min.js"></script>
+<script src="dist/question-full.js"></script>
 <script type="text/javascript">
   var query = {};
   location.search.substr(1).split("&").forEach(function(item) {
@@ -50,6 +50,19 @@
           : true;
         $scope.chart = query.chart || 'table';
         $scope.submission = {data: {}};
+
+        // Attempt to load an existing form, ignore if anonymous tag is present.
+        var anon = query.anon
+          ? boolean[query.anon]
+          : false;
+        var _old = localStorage.getItem($scope.formUrl);
+        if (!anon && _old !== null && $scope.submission.data) {
+          $scope.submission = _old;
+        }
+
+        $scope.$on('questionSave', function(event, response) {
+          localStorage.setItem('response', JSON.stringify(response.data));
+        });
       }
     ]);
 </script>
