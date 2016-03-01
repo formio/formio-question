@@ -18,6 +18,7 @@
     preview-results="preview"
     update-answer="update"
     chart="chart"
+    controller="fio"
   ></formio-question>
 </div>
 
@@ -40,6 +41,7 @@
           'false': false
         };
 
+        $scope.fio = {};
         $scope.formUrl = query.form || 'https://neuzcdyieetapcy.form.io/question';
         $scope.question = query.question || 'favcolor';
         $scope.preview = query.preview
@@ -56,12 +58,28 @@
           ? boolean[query.anon]
           : false;
         var _old = localStorage.getItem($scope.formUrl);
-        if (!anon && _old !== null && $scope.submission.data) {
+        if (!anon && _old) {
+          try {
+            _old = JSON.parse(_old);
+          }
+          catch(e) {
+            _old = {};
+          }
+
           $scope.submission = _old;
         }
 
+        // Check for analytics when the question is shown, on initial load.
+        var done = false;
+        $scope.$on('showQuestion', function() {
+          if (!done && $scope.question && _.has($scope.submission, 'data.' + $scope.question)) {
+            done = true;
+            $scope.fio.showAnalytics();
+          }
+        });
+
         $scope.$on('questionSave', function(event, response) {
-          localStorage.setItem('response', JSON.stringify(response.data));
+          localStorage.setItem($scope.formUrl, JSON.stringify(response.data));
         });
       }
     ]);

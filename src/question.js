@@ -31,7 +31,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
         chartAdvanced: '=',
         chartDataCustomizer: '=',
         waitForPromise: '=',
-        disabledInput: '='
+        disabledInput: '=',
+        controller: '='
       },
       link: function link(scope, element, attrs, controller, transcludeFn) {
         scope.questionLoaded = false;
@@ -281,6 +282,11 @@ angular.module('formio.question', ['formio', 'nvd3'])
             }
           };
 
+          // Expose the showAnalytics function outside the directive if a controller was given.
+          if ($scope.controller) {
+            $scope.controller.showAnalytics = $scope.showAnalytics;
+          }
+
           /**
            * Show the currently configured question, in the formio-question-form element.
            */
@@ -300,6 +306,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
                 form: 'page',
                 submission: 'submission'
               }))($scope));
+            $scope.$emit('showQuestion');
           };
 
           /**
