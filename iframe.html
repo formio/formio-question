@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="bower_components/formio/css/formio.css"/>
   <link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css">
+  <link rel="stylesheet" href="https://cdn.rawgit.com/formio/ngFormio/v1.2.1/dist/formio-full.min.css"/>
 </head>
 <body ng-app="formioQuestion" ng-controller="QuestionController">
 <div class="container">
@@ -22,8 +23,13 @@
   ></formio-question>
 </div>
 
-<link rel="stylesheet" href="https://cdn.rawgit.com/formio/ngFormio/v1.2.1/dist/formio-full.min.css"/>
-<script src="dist/question-full.js"></script>
+<script src="bower_components/formio/dist/formio-full.min.js"></script>
+<script src="bower_components/d3/d3.min.js"></script>
+<script src="bower_components/d3-cloud/build/d3.layout.cloud.js"></script>
+<script src="bower_components/nvd3/build/nv.d3.min.js"></script>
+<script src="bower_components/angular-nvd3/dist/angular-nvd3.min.js"></script>
+<script src="bower_components/lodash/dist/lodash.min.js"></script>
+<script src="dist/question.js"></script>
 <script type="text/javascript">
   var query = {};
   location.search.substr(1).split("&").forEach(function(item) {

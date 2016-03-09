@@ -39267,7 +39267,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
           $timeout
         ) {
           // The available graph types.
-          var types = ['table', 'pie', 'word cloud'];
+          var types = ['table', 'pie', 'word cloud', 'list'];
           $scope.views = {
             question: 'question',
             analytics: 'analytics'
@@ -39344,15 +39344,39 @@ angular.module('formio.question', ['formio', 'nvd3'])
             return '<div id="wordcloud"></div>'
           };
 
+          var makeList = function() {
+            return '<div class="row">' +
+              '<div class="col-md-12">' +
+                '<h3>Results</h3>' +
+                '<table class="table table-hover table-condensed">' +
+                  '<thead>' +
+                    '<tr>' +
+                      '<th>Answer</th>' +
+                      '<th>Time</th>' +
+                    '</tr>' +
+                  '</thead>' +
+                  '<tbody>' +
+                    '<tr ng-repeat="answer in data track by $index">' +
+                      '<td>{{answer.value}}</td>' +
+                      '<td>{{answer.created}}</td>' +
+                    '</tr>' +
+                  '</tbody>' +
+                '</table>' +
+              '</div>' +
+            '</div>';
+          };
+
           /**
            * Takes the common q/a result format and mutates it for graphing use in d3.
            *
            *
            * @returns {*}
            */
-          var normalizeData = function(type) {
+          var normalizeData = function(type, data) {
+            data = data || $scope.data;
+
             if (['table', 'word cloud'].indexOf(type) !== -1) {
-              return _($scope.data)
+              return _(data)
                 .map(function(value, key) {
                   return {
                     label: key,
@@ -39361,8 +39385,20 @@ angular.module('formio.question', ['formio', 'nvd3'])
                 })
                 .value();
             }
+            else if (['list'].indexOf(type) !== -1) {
+              return _(data)
+                .orderBy('created', 'desc')
+                .map(function(submission) {
+                  return {
+                    question: submission.data.key,
+                    value: submission.data.value,
+                    created: new Date(submission.created || 0).toString()
+                  };
+                })
+                .value();
+            }
             else if (['pie'].indexOf(type) !== -1) {
-              return _($scope.data)
+              return _(data)
                 .map(function(value, key) {
                   return {
                     key: key,
@@ -39376,9 +39412,56 @@ angular.module('formio.question', ['formio', 'nvd3'])
           /**
            * Makes a graph using the current type and data.
            *
+           * @param {Array} submissions
+           *   All the submissions for the current lesson.
+           *
            * @returns {string}
            */
-          var makeGraph = function() {
+          var makeGraph = function(submissions) {
+            /**
+             * Using all the submission data, filter it for the specific question, and return the metrics.
+             *
+             * @param {Array} submissions
+             *   All the submissions for the current lesson.
+             */
+            var countUniqueAnswers = function(submissions) {
+              // Create a map of the responses, where key:response and value:quantity.
+              $scope.data = {};
+              _(submissions)
+                .map('data.' + $scope.question)
+                .value()
+                .forEach(function(e) {
+                  if (e) {
+                    $scope.data[e] = $scope.data[e]+1 || 1;
+                  }
+                });
+
+              return $scope.data;
+            };
+
+            /**
+             * Filter the submission objects to contain the only applicable answer, while retaining submission data.
+             *
+             * @param {Array} submissions
+             *   All the submissions for the current lesson.
+             */
+            var filterQuestion = function(submissions) {
+              $scope.data = _(submissions)
+                .map(function(submission) {
+                  if (_.has(submission, 'data.' + $scope.question)) {
+                    submission.data = {
+                      key: $scope.question,
+                      value: _.get(submission, 'data.' + $scope.question)
+                    };
+
+                    return submission;
+                  }
+                })
+                .value();
+
+              return $scope.data;
+            };
+
             // Check for advanced usage.
             if ($scope.chartAdvanced &&_.get($scope.chartAdvanced, 'chart.type') && $scope.chartDataCustomizer) {
               // Make a nvd3 chart with the advanced options and mutate the data with the customizer.
@@ -39388,20 +39471,24 @@ angular.module('formio.question', ['formio', 'nvd3'])
 
             // Determine the chart type.
             var chart = ($scope.chart || 'table').toString().toLowerCase();
-
-            // Continue with regular usage.
-            $scope.data = normalizeData(chart);
             if (types.indexOf(chart) === -1) {
               console.error('Unknown type given: ' + chart);
             }
 
             if (chart === 'table') {
+              $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
               return makeTable();
             }
             else if (chart === 'word cloud') {
+              $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
               return makeWordCloud();
             }
+            else if (chart === 'list') {
+              $scope.data = normalizeData(chart, filterQuestion(submissions));
+              return makeList();
+            }
             else if (chart === 'pie') {
+              $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
               $scope.options = $scope.chartAdvanced || {
                 chart: {
                   type: 'pieChart',
@@ -39427,38 +39514,21 @@ angular.module('formio.question', ['formio', 'nvd3'])
             }
           };
 
+
           /**
            * Show the analytics for this specific question.
            */
           $scope.showAnalytics = function() {
             $scope.view = $scope.views.analytics;
-            /**
-             * Using all the submission data, filter it for the specific question.
-             *
-             * @param {String} question
-             *   The question key (API key) to select.
-             */
-            var filterForQuestion = function(submissions) {
-              // Create a map of the responses, where key:response and value:quantity.
-              $scope.data = {};
-              _(submissions)
-                .map('data.' + $scope.question)
-                .value()
-                .forEach(function(e) {
-                  if (e) {
-                    $scope.data[e] = $scope.data[e]+1 || 1;
-                  }
-                });
-            };
 
             /**
              * Make the display for the answer choices.
              */
-            var makeDisplay = function() {
+            var makeDisplay = function(submissions) {
               // Build the answer display.
               $scope.questionElementForm.html($compile(
                 '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[question] || "N/A"}}</span></h3><br>' +
-                makeGraph()
+                makeGraph(submissions)
               )($scope));
 
               // if a graph callback was set, execute it before continuing
@@ -39471,8 +39541,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
 
             // If the submissions were provided, use them rather than querying the api.
             if ($scope.useSubmissionCache && $scope.submissions) {
-              filterForQuestion($scope.submissions);
-              makeDisplay();
+              //filterForQuestion();
+              makeDisplay($scope.submissions);
               $scope.$emit('showAnalytics');
             }
             // The submissions were not given, but the form url was; query the api url.
@@ -39480,8 +39550,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
               $scope.useSubmissionCache = true;
               $http.get($scope.src + '/submission?limit=4294967295')
                 .then(function(data) {
-                  filterForQuestion(data.data);
-                  makeDisplay();
+                  //filterForQuestion();
+                  makeDisplay(data.data);
                   $scope.$emit('showAnalytics');
                 })
                 .catch(function(err) {
