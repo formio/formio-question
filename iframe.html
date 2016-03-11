@@ -15,6 +15,7 @@
   <formio-question
     src="formUrl"
     question="question"
+    child="child"
     submission="submission"
     preview-results="preview"
     update-answer="update"
@@ -57,6 +58,7 @@
           ? boolean[query.update]
           : true;
         $scope.chart = query.chart || 'table';
+        $scope.child = query.child || undefined;
 
         // Attempt to load an existing form, ignore if anonymous tag is present.
         var anon = query.anon

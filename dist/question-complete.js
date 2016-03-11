@@ -39225,6 +39225,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
       scope: {
         src: '=',
         question: '=',
+        child: '=',
         form: '=',
         submissions: '=',
         submission: '=',
@@ -39424,8 +39425,12 @@ angular.module('formio.question', ['formio', 'nvd3'])
             var countUniqueAnswers = function(submissions) {
               // Create a map of the responses, where key:response and value:quantity.
               $scope.data = {};
+
+              // If the child key is present, use that for the answer display.
+              var questionKey = ($scope.child || $scope.question);
+
               _(submissions)
-                .map('data.' + $scope.question)
+                .map('data.' + questionKey)
                 .value()
                 .forEach(function(e) {
                   if (e) {
@@ -39443,12 +39448,15 @@ angular.module('formio.question', ['formio', 'nvd3'])
              *   All the submissions for the current lesson.
              */
             var filterQuestion = function(submissions) {
+              // If the child key is present, use that for the answer display.
+              var questionKey = ($scope.child || $scope.question);
+
               $scope.data = _(submissions)
                 .map(function(submission) {
-                  if (_.has(submission, 'data.' + $scope.question)) {
+                  if (_.has(submission, 'data.' + questionKey)) {
                     submission.data = {
-                      key: $scope.question,
-                      value: _.get(submission, 'data.' + $scope.question)
+                      key: questionKey,
+                      value: _.get(submission, 'data.' + questionKey)
                     };
 
                     return submission;
@@ -39524,7 +39532,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
             var makeDisplay = function(submissions) {
               // Build the answer display.
               $scope.questionElementForm.html($compile(
-                '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[question] || "N/A"}}</span></h3><br>' +
+                '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[(child || question)] || "N/A"}}</span></h3><br>' +
                 makeGraph(submissions)
               )($scope));
 
@@ -39570,7 +39578,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
             $scope.questionLoaded = true;
             $scope.formioAlerts = [];
 
-            if (_.get($scope, 'submission.data.' + $scope.question) && !$scope.updateAnswer) {
+            if (_.get($scope, 'submission.data.' + ($scope.child || $scope.question)) && !$scope.updateAnswer) {
               return $scope.showAnalytics();
             }
 
