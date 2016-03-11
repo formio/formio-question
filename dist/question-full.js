@@ -39268,7 +39268,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
           $timeout
         ) {
           // The available graph types.
-          var types = ['table', 'pie', 'word cloud', 'list'];
+          var types = ['table', 'pie', 'word cloud', 'list', 'frequency'];
           $scope.views = {
             question: 'question',
             analytics: 'analytics'
@@ -39367,6 +39367,37 @@ angular.module('formio.question', ['formio', 'nvd3'])
             '</div>';
           };
 
+          var makeFrequency = function() {
+            return '<div class="row">' +
+              '<div class="col-md-12">' +
+                '<div class="row">' +
+                  '<div class="col-md-6">' +
+                    '<h3>Most Frequently Answered</h3>' +
+                    '<h1>{{data[0].label}}</h1>' +
+                    '<p class="lead">{{data[0].value}} / {{totalAnswers}} Answers<br>' +
+                    '{{data.length}} Answer Choices</p>' +
+                  '</div>' +
+                  '<div class="col-md-6">' +
+                    '<h3>Top 5 Answers</h3>' +
+                    '<div class="row" ng-repeat="answer in data | limitTo:5">' +
+                      '<div class="col-md-12 col-sm-6 col-xs-6">' +
+                        '<span class="pull-left">{{answer.label}}</span>' +
+                        '<span class="pull-right">{{answer.value}}</span>' +
+                      '</div>' +
+                      '<div class="col-md-12 col-sm-6 col-xs-6">' +
+                        '<div class="progress">' +
+                          '<div class="progress-bar progress-bar-info" style="width:{{(answer.value / totalAnswers)*100}}%">' +
+                            '{{(answer.value / totalAnswers)*100}}%' +
+                          '</div>' +
+                        '</div>' +
+                      '</div>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+          };
+
           /**
            * Takes the common q/a result format and mutates it for graphing use in d3.
            *
@@ -39376,7 +39407,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
           var normalizeData = function(type, data) {
             data = data || $scope.data;
 
-            if (['table', 'word cloud'].indexOf(type) !== -1) {
+            if (['table', 'word cloud', 'frequency'].indexOf(type) !== -1) {
               return _(data)
                 .map(function(value, key) {
                   return {
@@ -39384,6 +39415,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
                     value: value
                   };
                 })
+                .orderBy('value', 'desc')
                 .value();
             }
             else if (['list'].indexOf(type) !== -1) {
@@ -39487,6 +39519,12 @@ angular.module('formio.question', ['formio', 'nvd3'])
               $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
               return makeTable();
             }
+            else if (chart === 'frequency') {
+              $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
+              $scope.totalAnswers = _.sumBy($scope.data, 'value');
+
+              return makeFrequency();
+            }
             else if (chart === 'word cloud') {
               $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
               return makeWordCloud();
@@ -39549,7 +39587,6 @@ angular.module('formio.question', ['formio', 'nvd3'])
 
             // If the submissions were provided, use them rather than querying the api.
             if ($scope.useSubmissionCache && $scope.submissions) {
-              //filterForQuestion();
               makeDisplay($scope.submissions);
               $scope.$emit('showAnalytics');
             }
@@ -39558,7 +39595,6 @@ angular.module('formio.question', ['formio', 'nvd3'])
               $scope.useSubmissionCache = true;
               $http.get($scope.src + '/submission?limit=4294967295')
                 .then(function(data) {
-                  //filterForQuestion();
                   makeDisplay(data.data);
                   $scope.$emit('showAnalytics');
                 })
