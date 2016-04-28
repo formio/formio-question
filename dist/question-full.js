@@ -39239,7 +39239,9 @@ angular.module('formio.question', ['formio', 'nvd3'])
         chartDataCustomizer: '=',
         waitForPromise: '=',
         disabledInput: '=',
-        controller: '='
+        controller: '=',
+        customTypes: '=',
+        customGraphs: '='
       },
       link: function link(scope, element, attrs, controller, transcludeFn) {
         scope.questionLoaded = false;
@@ -39268,7 +39270,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
           $timeout
         ) {
           // The available graph types.
-          var types = ['table', 'pie', 'word cloud', 'list', 'frequency'];
+          $scope.types = _.uniq([].concat(['table', 'pie', 'word cloud', 'list', 'frequency'], $scope.customTypes));
           $scope.views = {
             question: 'question',
             analytics: 'analytics'
@@ -39276,127 +39278,219 @@ angular.module('formio.question', ['formio', 'nvd3'])
           $scope.view = $scope.views.question;
 
           /**
-           * Generates the html for a table display of q/a.
+           * Using all the submission data, filter it for the specific question, and return the metrics.
+           *
+           * @param {Array} submissions
+           *   All the submissions for the current lesson.
            */
-          var makeTable = function() {
-            return '<div class="row">' +
-              '<div class="col-md-12">' +
-                '<h3>Results</h3>' +
-                '<table class="table table-hover table-condensed">' +
-                  '<thead>' +
-                    '<tr>' +
-                      '<th>Answer</th>' +
-                      '<th>Count</th>' +
-                    '</tr>' +
-                  '</thead>' +
-                  '<tbody>' +
-                    '<tr ng-repeat="answer in data track by $index">' +
-                      '<td>{{answer.label}}</td>' +
-                      '<td>{{answer.value}}</td>' +
-                    '</tr>' +
-                  '</tbody>' +
-                '</table>' +
-              '</div>' +
-            '</div>';
+          var countUniqueAnswers = function(submissions) {
+            // Create a map of the responses, where key:response and value:quantity.
+            $scope.data = {};
+
+            // If the child key is present, use that for the answer display.
+            var questionKey = ($scope.child || $scope.question);
+
+            _(submissions)
+              .map('data.' + questionKey)
+              .value()
+              .forEach(function(e) {
+                if (e) {
+                  if (typeof e !== 'string') {
+                    e = JSON.stringify(e);
+                  }
+
+                  $scope.data[e] = $scope.data[e]+1 || 1;
+                }
+              });
+
+            return $scope.data;
           };
 
-          var makeWordCloud = function() {
-            var total = _($scope.data)
-              .map('value')
+          /**
+           * Filter the submission objects to contain the only applicable answer, while retaining submission data.
+           *
+           * @param {Array} submissions
+           *   All the submissions for the current lesson.
+           */
+          var filterQuestion = function(submissions) {
+            // If the child key is present, use that for the answer display.
+            var questionKey = ($scope.child || $scope.question);
+
+            $scope.data = _(submissions)
+              .map(function(submission) {
+                if (_.has(submission, 'data.' + questionKey)) {
+                  submission.data = {
+                    key: questionKey,
+                    value: _.get(submission, 'data.' + questionKey)
+                  };
+
+                  return submission;
+                }
+              })
               .value();
-            total = _.sum(total);
 
-            $scope.graphCallback = function(then) {
-              var node = $scope.questionElementForm.find('#wordcloud')[0];
-              var fill = d3.scale.category20();
-              var layout = d3.layout.cloud()
-                .size([400, 400])
-                .words($scope.data.map(function(d) {
-                  return {text: d.label.toString(), size: ((d.value/total) * 150)};
-                }))
-                .padding(5)
-                .rotate(function() { return ~~(Math.random() * 2) * 90; })
-                .font('Impact')
-                .fontSize(function(d) { return d.size; })
-                .on('end', draw);
-              layout.start();
-
-              function draw(words) {
-                d3.select(node).append('svg')
-                  .attr('width', layout.size()[0])
-                  .attr('height', layout.size()[1])
-                  .append('g')
-                  .attr('transform', 'translate(' + layout.size()[0] / 2 + ',' + layout.size()[1] / 2 + ')')
-                  .selectAll('text')
-                  .data(words)
-                  .enter().append('text')
-                  .style('font-size', function(d) { return d.size + 'px'; })
-                  .style('font-family', 'Impact')
-                  .style('fill', function(d, i) { return fill(i); })
-                  .attr('text-anchor', 'middle')
-                  .attr('transform', function(d) {
-                    return 'translate(' + [d.x, d.y] + ')rotate(' + d.rotate + ')';
-                  })
-                  .text(function(d) { return d.text; });
-                then();
-              };
-            };
-
-            return '<div id="wordcloud"></div>'
+            return $scope.data;
           };
 
-          var makeList = function() {
-            return '<div class="row">' +
-              '<div class="col-md-12">' +
+          // The available graphing methods.
+          $scope.graphs = {
+            table: function(submissions) {
+              $scope.data = normalizeData('table', countUniqueAnswers(submissions));
+
+              return '<div class="row">' +
+                '<div class="col-md-12">' +
                 '<h3>Results</h3>' +
                 '<table class="table table-hover table-condensed">' +
-                  '<thead>' +
-                    '<tr>' +
-                      '<th>Answer</th>' +
-                      '<th>Time</th>' +
-                    '</tr>' +
-                  '</thead>' +
-                  '<tbody>' +
-                    '<tr ng-repeat="answer in data track by $index">' +
-                      '<td>{{answer.value}}</td>' +
-                      '<td>{{answer.created}}</td>' +
-                    '</tr>' +
-                  '</tbody>' +
+                '<thead>' +
+                '<tr>' +
+                '<th>Answer</th>' +
+                '<th>Count</th>' +
+                '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+                '<tr ng-repeat="answer in data track by $index">' +
+                '<td>{{answer.label}}</td>' +
+                '<td>{{answer.value}}</td>' +
+                '</tr>' +
+                '</tbody>' +
                 '</table>' +
-              '</div>' +
-            '</div>';
+                '</div>' +
+                '</div>';
+            },
+            frequency: function(submissions) {
+              $scope.data = normalizeData('frequency', countUniqueAnswers(submissions));
+              $scope.totalAnswers = _.sumBy($scope.data, 'value');
+
+              return '<div class="row">' +
+                '<div class="col-md-12">' +
+                '<div class="row">' +
+                '<div class="col-md-6">' +
+                '<h3>Most Frequently Answered</h3>' +
+                '<h1>{{data[0].label}}</h1>' +
+                '<p class="lead">{{data[0].value}} / {{totalAnswers}} Answers<br>' +
+                '{{data.length}} Answer Choices</p>' +
+                '</div>' +
+                '<div class="col-md-6">' +
+                '<h3>Top 5 Answers</h3>' +
+                '<div class="row" ng-repeat="answer in data | limitTo:5">' +
+                '<div class="col-md-12 col-sm-6 col-xs-6">' +
+                '<span class="pull-left">{{answer.label}}</span>' +
+                '<span class="pull-right">{{answer.value}}</span>' +
+                '</div>' +
+                '<div class="col-md-12 col-sm-6 col-xs-6">' +
+                '<div class="progress">' +
+                '<div class="progress-bar progress-bar-info" style="width:{{(answer.value / totalAnswers)*100}}%">' +
+                '{{(answer.value / totalAnswers)*100}}%' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+            },
+            'word cloud': function(submissions) {
+              $scope.data = normalizeData('word cloud', countUniqueAnswers(submissions));
+              var total = _($scope.data)
+                .map('value')
+                .value();
+              total = _.sum(total);
+
+              $scope.graphCallback = function(then) {
+                var node = $scope.questionElementForm.find('#wordcloud')[0];
+                var fill = d3.scale.category20();
+                var layout = d3.layout.cloud()
+                  .size([400, 400])
+                  .words($scope.data.map(function(d) {
+                    return {text: d.label.toString(), size: ((d.value/total) * 150)};
+                  }))
+                  .padding(5)
+                  .rotate(function() { return ~~(Math.random() * 2) * 90; })
+                  .font('Impact')
+                  .fontSize(function(d) { return d.size; })
+                  .on('end', draw);
+                layout.start();
+
+                function draw(words) {
+                  d3.select(node).append('svg')
+                    .attr('width', layout.size()[0])
+                    .attr('height', layout.size()[1])
+                    .append('g')
+                    .attr('transform', 'translate(' + layout.size()[0] / 2 + ',' + layout.size()[1] / 2 + ')')
+                    .selectAll('text')
+                    .data(words)
+                    .enter().append('text')
+                    .style('font-size', function(d) { return d.size + 'px'; })
+                    .style('font-family', 'Impact')
+                    .style('fill', function(d, i) { return fill(i); })
+                    .attr('text-anchor', 'middle')
+                    .attr('transform', function(d) {
+                      return 'translate(' + [d.x, d.y] + ')rotate(' + d.rotate + ')';
+                    })
+                    .text(function(d) { return d.text; });
+                  then();
+                };
+              };
+
+              return '<div id="wordcloud"></div>'
+            },
+            list: function(submissions) {
+              $scope.data = normalizeData('list', filterQuestion(submissions));
+
+              return '<div class="row">' +
+                '<div class="col-md-12">' +
+                '<h3>Results</h3>' +
+                '<table class="table table-hover table-condensed">' +
+                '<thead>' +
+                '<tr>' +
+                '<th>Answer</th>' +
+                '<th>Time</th>' +
+                '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+                '<tr ng-repeat="answer in data track by $index">' +
+                '<td>{{answer.value}}</td>' +
+                '<td>{{answer.created}}</td>' +
+                '</tr>' +
+                '</tbody>' +
+                '</table>' +
+                '</div>' +
+                '</div>';
+            },
+            pie: function(submissions) {
+              $scope.data = normalizeData('pie', countUniqueAnswers(submissions));
+              $scope.options = $scope.chartAdvanced || {
+                  chart: {
+                    type: 'pieChart',
+                    height: 500,
+                    x: function(d) { return d.key },
+                    y: function(d) { return d.y },
+                    showLabels: true,
+                    duration: 500,
+                    labelThreshold: 0.01,
+                    labelSunbeamLayout: true,
+                    legend: {
+                      margin: {
+                        top: 5,
+                        right: 35,
+                        bottom: 5,
+                        left: 0
+                      }
+                    }
+                  }
+                };
+
+              return '<nvd3 options="options" data="data"></nvd3>'
+            }
           };
 
-          var makeFrequency = function() {
-            return '<div class="row">' +
-              '<div class="col-md-12">' +
-                '<div class="row">' +
-                  '<div class="col-md-6">' +
-                    '<h3>Most Frequently Answered</h3>' +
-                    '<h1>{{data[0].label}}</h1>' +
-                    '<p class="lead">{{data[0].value}} / {{totalAnswers}} Answers<br>' +
-                    '{{data.length}} Answer Choices</p>' +
-                  '</div>' +
-                  '<div class="col-md-6">' +
-                    '<h3>Top 5 Answers</h3>' +
-                    '<div class="row" ng-repeat="answer in data | limitTo:5">' +
-                      '<div class="col-md-12 col-sm-6 col-xs-6">' +
-                        '<span class="pull-left">{{answer.label}}</span>' +
-                        '<span class="pull-right">{{answer.value}}</span>' +
-                      '</div>' +
-                      '<div class="col-md-12 col-sm-6 col-xs-6">' +
-                        '<div class="progress">' +
-                          '<div class="progress-bar progress-bar-info" style="width:{{(answer.value / totalAnswers)*100}}%">' +
-                            '{{(answer.value / totalAnswers)*100}}%' +
-                          '</div>' +
-                        '</div>' +
-                      '</div>' +
-                    '</div>' +
-                  '</div>' +
-                '</div>' +
-              '</div>' +
-            '</div>';
-          };
+          // Add the custom graphs if given.
+          _.forEach($scope.customGraphs, function(fn, name) {
+            if (!$scope.graphs.hasOwnProperty(name)) {
+              $scope.graphs[name] = fn;
+            }
+          });
 
           /**
            * Takes the common q/a result format and mutates it for graphing use in d3.
@@ -39451,57 +39545,6 @@ angular.module('formio.question', ['formio', 'nvd3'])
            * @returns {string}
            */
           var makeGraph = function(submissions) {
-            /**
-             * Using all the submission data, filter it for the specific question, and return the metrics.
-             *
-             * @param {Array} submissions
-             *   All the submissions for the current lesson.
-             */
-            var countUniqueAnswers = function(submissions) {
-              // Create a map of the responses, where key:response and value:quantity.
-              $scope.data = {};
-
-              // If the child key is present, use that for the answer display.
-              var questionKey = ($scope.child || $scope.question);
-
-              _(submissions)
-                .map('data.' + questionKey)
-                .value()
-                .forEach(function(e) {
-                  if (e) {
-                    $scope.data[e] = $scope.data[e]+1 || 1;
-                  }
-                });
-
-              return $scope.data;
-            };
-
-            /**
-             * Filter the submission objects to contain the only applicable answer, while retaining submission data.
-             *
-             * @param {Array} submissions
-             *   All the submissions for the current lesson.
-             */
-            var filterQuestion = function(submissions) {
-              // If the child key is present, use that for the answer display.
-              var questionKey = ($scope.child || $scope.question);
-
-              $scope.data = _(submissions)
-                .map(function(submission) {
-                  if (_.has(submission, 'data.' + questionKey)) {
-                    submission.data = {
-                      key: questionKey,
-                      value: _.get(submission, 'data.' + questionKey)
-                    };
-
-                    return submission;
-                  }
-                })
-                .value();
-
-              return $scope.data;
-            };
-
             // Check for advanced usage.
             if ($scope.chartAdvanced &&_.get($scope.chartAdvanced, 'chart.type') && $scope.chartDataCustomizer) {
               // Make a nvd3 chart with the advanced options and mutate the data with the customizer.
@@ -39511,52 +39554,11 @@ angular.module('formio.question', ['formio', 'nvd3'])
 
             // Determine the chart type.
             var chart = ($scope.chart || 'table').toString().toLowerCase();
-            if (types.indexOf(chart) === -1) {
+            if ($scope.graphs.hasOwnProperty(chart)) {
+              return $scope.graphs[chart](submissions, $scope);
+            }
+            else {
               console.error('Unknown type given: ' + chart);
-            }
-
-            if (chart === 'table') {
-              $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
-              return makeTable();
-            }
-            else if (chart === 'frequency') {
-              $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
-              $scope.totalAnswers = _.sumBy($scope.data, 'value');
-
-              return makeFrequency();
-            }
-            else if (chart === 'word cloud') {
-              $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
-              return makeWordCloud();
-            }
-            else if (chart === 'list') {
-              $scope.data = normalizeData(chart, filterQuestion(submissions));
-              return makeList();
-            }
-            else if (chart === 'pie') {
-              $scope.data = normalizeData(chart, countUniqueAnswers(submissions));
-              $scope.options = $scope.chartAdvanced || {
-                chart: {
-                  type: 'pieChart',
-                  height: 500,
-                  x: function(d) { return d.key },
-                  y: function(d) { return d.y },
-                  showLabels: true,
-                  duration: 500,
-                  labelThreshold: 0.01,
-                  labelSunbeamLayout: true,
-                  legend: {
-                    margin: {
-                      top: 5,
-                      right: 35,
-                      bottom: 5,
-                      left: 0
-                    }
-                  }
-                }
-              };
-
-              return '<nvd3 options="options" data="data"></nvd3>'
             }
           };
 
