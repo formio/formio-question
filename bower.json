@@ -1,11 +1,11 @@
 {
   "name": "formio-question",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "authors": [
     "Zack Urben <zackurben@gmail.com>"
   ],
   "description": "A directive that provides question and answer capabilities for Form.io forms.",
-  "main": "dist/question-complete.min.js",
+  "main": "dist/question-complete.js",
   "moduleType": [],
   "keywords": [
     "formio"
