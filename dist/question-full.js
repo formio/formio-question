@@ -39327,6 +39327,7 @@ angular.module('formio.question', ['formio', 'nvd3'])
                   return submission;
                 }
               })
+              .filter()
               .value();
 
             return $scope.data;
@@ -39337,7 +39338,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
             table: function(submissions) {
               $scope.data = normalizeData('table', countUniqueAnswers(submissions));
 
-              return '<div class="row">' +
+              return '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[(child || question)] || "N/A"}}</span></h3><br>' +
+                '<div class="row">' +
                 '<div class="col-md-12">' +
                 '<h3>Results</h3>' +
                 '<table class="table table-hover table-condensed">' +
@@ -39361,7 +39363,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
               $scope.data = normalizeData('frequency', countUniqueAnswers(submissions));
               $scope.totalAnswers = _.sumBy($scope.data, 'value');
 
-              return '<div class="row">' +
+              return '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[(child || question)] || "N/A"}}</span></h3><br>' +
+                '<div class="row">' +
                 '<div class="col-md-12">' +
                 '<div class="row">' +
                 '<div class="col-md-6">' +
@@ -39433,12 +39436,14 @@ angular.module('formio.question', ['formio', 'nvd3'])
                 };
               };
 
-              return '<div id="wordcloud"></div>'
+              return '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[(child || question)] || "N/A"}}</span></h3><br>' +
+                '<div id="wordcloud"></div>'
             },
             list: function(submissions) {
               $scope.data = normalizeData('list', filterQuestion(submissions));
 
-              return '<div class="row">' +
+              return '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[(child || question)] || "N/A"}}</span></h3><br>' +
+                '<div class="row">' +
                 '<div class="col-md-12">' +
                 '<h3>Results</h3>' +
                 '<table class="table table-hover table-condensed">' +
@@ -39481,7 +39486,8 @@ angular.module('formio.question', ['formio', 'nvd3'])
                   }
                 };
 
-              return '<nvd3 options="options" data="data"></nvd3>'
+              return '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[(child || question)] || "N/A"}}</span></h3><br>' +
+                '<nvd3 options="options" data="data"></nvd3>'
             }
           };
 
@@ -39575,7 +39581,6 @@ angular.module('formio.question', ['formio', 'nvd3'])
             var makeDisplay = function(submissions) {
               // Build the answer display.
               $scope.questionElementForm.html($compile(
-                '<h3 class="fio-question-output">Answered: <span class="fio-question-answer">{{submission.data[(child || question)] || "N/A"}}</span></h3><br>' +
                 makeGraph(submissions)
               )($scope));
 
